@@ -9,7 +9,7 @@ var bodyParser = require('body-parser')
 
 var Rating = require('./Rating');
 var InitiateSpotRating = require('./commands/InitiateSpotRating');
-var RatingDetail = require('./subscribers/spot/RatingDetail');
+var RatingDetail = require('./subscribers/spot/rating-detail');
 
 // CONFIGURE EXPRESS SERVER
 app.set('json spaces', 4);
@@ -34,23 +34,21 @@ app.get('/spot/rate', function(req, res) {
 
 app.post('/spot/rate', function(req, res, next) {
     console.log(JSON.stringify(req.body));
-
-    // read stream, retrieve all events in array to pass into Rating aggregate
-    var events = [];
-    var dir = spotRatingES + req.body.spotId;
-    readStream(dir, function(content) {
-        // console.log(content)
-        events.push(content);
-    }, function(err) {
-        throw err;
-    });
     // console.log(events);
     var rating = new Rating();
-    events.forEach(function(e) {
-        rating.hydrate(e);
-    });
+    var events = [];
+    var dir = spotRatingES + req.body.spotId + "/" + req.body.userId;
+    if(fs.existsSync(dir)) { // spot has been rated by this user
+        readStream(dir, function(content) {
+            events.push(content);
+        }, function(err) {
+            throw err;
+        });
+        events.forEach(function(e) {
+            rating.hydrate(e);
+        });
+    }
     rating.execute(new InitiateSpotRating(req.body));
-    // var command = new InitiateSpotRating(req.body);
 })
 
 function readStream(dirname, onFileContent, onError) {

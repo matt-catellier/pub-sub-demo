@@ -1,15 +1,10 @@
 var InitiateSpotRating = require('./commands/InitiateSpotRating');
 var SpotRated = require('./events/SpotRated');
-// handles error when pass in invalid command
-function objTypeName(obj) {
-    if(typeof obj === 'object' && typeof obj.constructor === 'function')
-        return obj.constructor.name;
-    return typeof obj;
-}
 
-// register command and event hadlers here?
-function Rating() {
+function Rating() { // aggregate
     var events = [];
+    var spotId = null;
+    var userId = null;
     var rating = null; // private variables?
     var comment = null;
     this.execute = function(command) { // event handler?
@@ -17,25 +12,31 @@ function Rating() {
         throw new Error('Invalid command type: ' + objTypeName(command));
     };
 
-    // creates instance of event
-    function _initiateSpotRating(command) {
-        // validate this
-        if(this.spotId && this.userId && this.rating && this.comment) {
-            var dir = '/Users/catellier/Projects/pub-sub/v5/output/SpotRatingEventStore/' + this.spotId;
-            if(!fs.existsSync(dir)) new SpotRated(this);
-
-        }
+    function _initiateSpotRating(command) { // process command
+        command.execute();
     }
 
-    // used to get back to maintain state in between reads from DB
-    this.hydrate = function(event) { // event handler?
+    this.hydrate = function(event) {
         if(event instanceof SpotRated) return _spotRated(event);
     }
 
     function _spotRated(spotRated) {
+        spotId = spotRated.spotId;
+        userId = spotRated.userId;
+        rating = spotRated.rating;
+        comment = spotRated.comment;
+    }
+
+    function _spotRatingUpdated(spotRated) {
         rating = spotRated.rating;
         comment = spotRated.comment;
     }
 }
 
 module.exports = Rating;
+// HELPERS
+function objTypeName(obj) {
+    if(typeof obj === 'object' && typeof obj.constructor === 'function')
+        return obj.constructor.name;
+    return typeof obj;
+}

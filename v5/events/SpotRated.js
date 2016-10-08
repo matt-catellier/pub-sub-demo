@@ -1,9 +1,9 @@
 var uuid = require('uuid');
 var fs = require('fs');
+var RatingEventBus = require('./../rating-event-bus');
 
 function SpotRated(command) {
     this.version = '1.0.0';
-    this.guid = uuid.v4();
     this.spotId = command.spotId;
     this.userId = command.userId;
     this.rating = command.rating;
@@ -14,19 +14,24 @@ function SpotRated(command) {
 
 SpotRated.prototype.handle = function() {
     var message = JSON.stringify({
+        version: this.version,
+        spotId: this.spotId,
         userId: this.userId,
         rating: this.rating,
         comment: this.comment
     });
-    var dir = '/Users/catellier/Projects/pub-sub/v5/output/SpotRatingEventStore/' + this.spotId;
-    // create folder
-    if(!fs.existsSync(dir)) fs.mkdirSync(dir);
-    // create file
-    fs.writeFile(dir + '/' + this.guid + '.json', message, function(err) {
+    var spotDir = __dirname + '/../output/SpotRatingEventStore/' + this.spotId;
+    fs.mkdirSync(spotDir);
+    var userDir = spotDir + "/" + this.userId + "/";
+    fs.mkdirSync(userDir); // create folder for user
+    fs.writeFile(userDir + '/' + uuid.v4() + '.json', message, function(err) {
         if(err) console.log(err);
     });
-    // broadcast this globally!
-    console.log('SpotRated');
+    console.log('SpotRated event handled');
+    var bus = new RatingEventBus();
+    bus.emit('EventFired', this); // fire events globally
 }
+
+SpotRated.prototype.subscribers = []
 
 module.exports = SpotRated;
