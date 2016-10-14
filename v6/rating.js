@@ -37,3 +37,9 @@ function Rating() { // aggregate
     }
 }
 module.exports = Rating;
+
+function objTypeName(obj) {
+    if(typeof obj === 'object' && typeof obj.constructor === 'function')
+        return obj.constructor.name;
+    return typeof obj;
+}
