@@ -3,7 +3,7 @@ var SpotRated = require('./events/SpotRated');
 var fs = require('fs');
 
 function Rating() { // aggregate
-    var events = []; // private
+    this.events = [];
     this.spotId = null; // public
     this.userId = null;
     this.rating = null;
@@ -15,7 +15,7 @@ function Rating() { // aggregate
     };
 
     function _initiateSpotRating(command) { // process command
-        if(this.spotId && this.userId) {
+        if(this.spotId == command.spotId && this.userId == command.userId) { // check if user already rated spot
             throw new Error('User has already rated this spot.');
         }
         return new SpotRated({
@@ -27,7 +27,7 @@ function Rating() { // aggregate
     }
 
     this.hydrate = function() {
-        events.forEach(function(event) {
+        this.events.forEach(function(event) {
             if(event instanceof SpotRated) return _spotRated(event);
         });
     }
@@ -53,7 +53,6 @@ function Rating() { // aggregate
         console.log(events);
     }
 }
-
 module.exports = Rating;
 // HELPERS
 function objTypeName(obj) {
