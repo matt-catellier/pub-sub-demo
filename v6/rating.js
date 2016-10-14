@@ -3,11 +3,10 @@ var SpotRated = require('./events/SpotRated');
 var fs = require('fs');
 
 function Rating() { // aggregate
-    this.events = [];
-    this.spotId = null; // public
-    this.userId = null;
-    this.rating = null;
-    this.comment = null;
+    this._spotId = null; // public
+    this._userId = null;
+    this._rating = null;
+    this._comment = null;
 
     this.execute = function(command) {
         if(command instanceof InitiateSpotRating) return _initiateSpotRating(command);
@@ -15,7 +14,7 @@ function Rating() { // aggregate
     };
 
     function _initiateSpotRating(command) { // process command
-        if(this.spotId == command.spotId && this.userId == command.userId) { // check if user already rated spot
+        if(this._spotId == command.spotId && this._userId == command.userId) { // check if user already rated spot
             throw new Error('User has already rated this spot.');
         }
         return new SpotRated({
@@ -26,37 +25,15 @@ function Rating() { // aggregate
         });
     }
 
-    this.hydrate = function() {
-        this.events.forEach(function(event) {
-            if(event instanceof SpotRated) return _spotRated(event);
-        });
+    this.hydrate = function(event) {
+        if(event instanceof SpotRated) return _spotRated(event);
     }
 
     function _spotRated(spotRated) {
-        this.spotId = spotRated.spotId;
-        this.userId = spotRated.userId;
-        this.rating = spotRated.rating;
-        this.comment = spotRated.comment;
-    }
-
-    this.readStream = function(spotId, userId) {
-        var spotDir = __dirname + '/output/SpotRatingEventStore/' + spotId;
-        var userDir = spotDir + "/" + userId;
-        console.log('READ STREAM');
-        if(fs.existsSync(spotDir) && fs.existsSync(userDir)) {
-            var filenames = fs.readdirSync(userDir);
-            filenames.forEach(function(filename) {
-                var content = fs.readFileSync(userDir + '/' + filename, 'utf-8');
-                events.push(content);
-            });
-        }
-        console.log(events);
+        this._spotId = spotRated.spotId;
+        this._userId = spotRated.userId;
+        this._rating = spotRated.rating;
+        this._comment = spotRated.comment;
     }
 }
 module.exports = Rating;
-// HELPERS
-function objTypeName(obj) {
-    if(typeof obj === 'object' && typeof obj.constructor === 'function')
-        return obj.constructor.name;
-    return typeof obj;
-}
