@@ -1,5 +1,3 @@
-/**/output/SpotRatingEventStore/**
-/**/output/SpotRatingEventStore/**
-/**/output/eventStore/**
-/**/output/ratings/**
-/**/node_modules/**
+/**/output/SpotRatingEventStore
+/**/output/SpotRatingEventStore
+/**/node_modules
